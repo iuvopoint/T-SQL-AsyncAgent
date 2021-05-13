@@ -1,0 +1,10 @@
+﻿CREATE PROCEDURE [Async].[Await]
+AS
+BEGIN
+
+	SET XACT_ABORT ON;
+
+	-- TODO
+	
+	RETURN 0;
+END
