@@ -10,7 +10,7 @@ BEGIN
 	SET @ActualCat = (
 		SELECT TOP 1 [name]
 		FROM [msdb].[dbo].[syscategories]
-		WHERE [name] = @ExpectedCat
+		WHERE [name] = N'Async'
 	);
 
 	-- Assert

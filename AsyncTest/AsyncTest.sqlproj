@@ -98,7 +98,9 @@
     <Build Include="Bootstrap\RegisterTestClasses.sql" />
     <Build Include="AgentTests\Tests\Test New Agent category is correctly created.sql" />
     <Build Include="Bootstrap\RemoveAsyncAgentCategory.sql" />
-    <Build Include="AgentTests\Tests\Test Agent category does not already exist in startup.sql" />
+    <Build Include="AgentTests\Tests\Test Agent category does not already exist on startup.sql" />
+    <Build Include="AgentTests\Tests\Test Agent job does not already exist on startup.sql" />
+    <Build Include="AgentTests\Tests\Test New Agent job is correctly created.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Post\Script.PostDeployment.sql" />

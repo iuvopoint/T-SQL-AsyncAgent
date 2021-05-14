@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [AsyncAgent].[Private_CreateJob] (
  @JobName NVARCHAR(128)
-,@Description NVARCHAR(512)
+,@Description NVARCHAR(512) = N''
 ,@Force BIT = 0
 )
 AS
@@ -28,6 +28,9 @@ BEGIN
 		,@description = @Description
 		,@category_name = 'Async'
 	;
+
+	-- Local job
+	EXEC [msdb].[dbo].[sp_add_jobserver] @job_name = @JobName;
 
 	RETURN 0;
 
