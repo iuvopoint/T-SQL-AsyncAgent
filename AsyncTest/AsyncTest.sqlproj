@@ -3,16 +3,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <Name>Async</Name>
+    <Name>AsyncTest</Name>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectVersion>4.1</ProjectVersion>
-    <ProjectGuid>{e60edc30-701d-437c-ab5f-44fd74a9b6e5}</ProjectGuid>
+    <ProjectGuid>{0db8d7e6-8020-4ec1-a231-f02ec7e263ac}</ProjectGuid>
     <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
     <RootPath>
     </RootPath>
-    <RootNamespace>Async</RootNamespace>
-    <AssemblyName>Async</AssemblyName>
+    <RootNamespace>AsyncTest</RootNamespace>
+    <AssemblyName>AsyncTest</AssemblyName>
     <ModelCollation>1033,CI</ModelCollation>
     <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
     <DeployToDatabase>True</DeployToDatabase>
@@ -58,20 +58,14 @@
   <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
     <Folder Include="Properties" />
-    <Folder Include="Async" />
-    <Folder Include="Async\Procs" />
-    <Folder Include="Agent" />
-    <Folder Include="Agent\Procs" />
   </ItemGroup>
   <ItemGroup>
-    <Build Include="Agent\AsyncAgent.sql" />
-    <Build Include="Agent\Procs\Private_CreateJob.sql" />
-    <Build Include="Agent\Procs\Private_AddAsyncCategoryIfNotExists.sql" />
-    <Build Include="Async\Async.sql" />
-    <Build Include="Async\Procs\Start.sql" />
-  </ItemGroup>
-  <ItemGroup>
-    <Build Include="Async\Procs\Await.sql" />
+    <ProjectReference Include="..\Async\Async.sqlproj">
+      <Name>Async</Name>
+      <Project>{e60edc30-701d-437c-ab5f-44fd74a9b6e5}</Project>
+      <Private>True</Private>
+      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

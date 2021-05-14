@@ -13,7 +13,7 @@ BEGIN
 		THROW 50001 , N'Job name must not be empty!', 0
 	;
 
-	EXEC [AsyncAgent].[Private_AddAsyncCategoryIfExists];
+	EXEC [AsyncAgent].[Private_AddAsyncCategoryIfNotExists];
 
 	IF @Force = 0 AND EXISTS (
 		SELECT TOP 1 1

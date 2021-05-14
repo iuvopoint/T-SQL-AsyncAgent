@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [AsyncAgent].[Private_AddAsyncCategoryIfExists]
+﻿CREATE PROCEDURE [AsyncAgent].[Private_AddAsyncCategoryIfNotExists]
 AS
 BEGIN
 
