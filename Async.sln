@@ -7,6 +7,8 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Async", "Async\Async.sqlpro
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "AsyncTest", "AsyncTest\AsyncTest.sqlproj", "{0DB8D7E6-8020-4EC1-A231-F02EC7E263AC}"
 EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "tSQLt", "tSQLt\tSQLt.sqlproj", "{D9BFFAFD-371F-4527-A6FA-644A6CE5E01F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,12 @@ Global
 		{0DB8D7E6-8020-4EC1-A231-F02EC7E263AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DB8D7E6-8020-4EC1-A231-F02EC7E263AC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0DB8D7E6-8020-4EC1-A231-F02EC7E263AC}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{D9BFFAFD-371F-4527-A6FA-644A6CE5E01F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9BFFAFD-371F-4527-A6FA-644A6CE5E01F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9BFFAFD-371F-4527-A6FA-644A6CE5E01F}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{D9BFFAFD-371F-4527-A6FA-644A6CE5E01F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9BFFAFD-371F-4527-A6FA-644A6CE5E01F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9BFFAFD-371F-4527-A6FA-644A6CE5E01F}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

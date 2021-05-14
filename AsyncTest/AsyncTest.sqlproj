@@ -22,7 +22,7 @@
     <SqlServerVerification>False</SqlServerVerification>
     <IncludeCompositeObjects>True</IncludeCompositeObjects>
     <TargetDatabaseSet>True</TargetDatabaseSet>
-    <DefaultCollation>Latin1_General_CI_AS</DefaultCollation>
+    <DefaultCollation>SQL_Latin1_General_CP1_CI_AS</DefaultCollation>
     <Recovery>SIMPLE</Recovery>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -58,11 +58,24 @@
   <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
     <Folder Include="Properties" />
+    <Folder Include="AgentTests" />
+    <Folder Include="AgentTests\Tests" />
+    <Folder Include="AgentTests\SetUp" />
+    <Folder Include="Bootstrap" />
+    <Folder Include="Scripts" />
+    <Folder Include="Scripts\Post" />
+    <Folder Include="Scripts\Pre" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Async\Async.sqlproj">
       <Name>Async</Name>
       <Project>{e60edc30-701d-437c-ab5f-44fd74a9b6e5}</Project>
+      <Private>True</Private>
+      <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
+    </ProjectReference>
+    <ProjectReference Include="..\tSQLt\tSQLt.sqlproj">
+      <Name>tSQLt</Name>
+      <Project>{d9bffafd-371f-4527-a6fa-644a6ce5e01f}</Project>
       <Private>True</Private>
       <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
     </ProjectReference>
@@ -78,5 +91,22 @@
       <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
       <DatabaseVariableLiteralValue>msdb</DatabaseVariableLiteralValue>
     </ArtifactReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="AgentTests\AgentTests.sql" />
+    <Build Include="Bootstrap\Bootstrap.sql" />
+    <Build Include="Bootstrap\RegisterTestClasses.sql" />
+    <Build Include="AgentTests\Tests\Test New Agent category is correctly created.sql" />
+    <Build Include="Bootstrap\RemoveAsyncAgentCategory.sql" />
+    <Build Include="AgentTests\Tests\Test Agent category does not already exist in startup.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Scripts\Post\Script.PostDeployment.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="localhost.AsyncTest.publish.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PreDeploy Include="Scripts\Pre\Script.PreDeployment.sql" />
   </ItemGroup>
 </Project>
