@@ -101,6 +101,9 @@
     <Build Include="AgentTests\Tests\Test Agent category does not already exist on startup.sql" />
     <Build Include="AgentTests\Tests\Test Agent job does not already exist on startup.sql" />
     <Build Include="AgentTests\Tests\Test New Agent job is correctly created.sql" />
+    <Build Include="AgentTests\Tests\Test Agent job step is correctly created.sql" />
+    <Build Include="AgentTests\Tests\Test Agent job step does not already exist on startup.sql" />
+    <Build Include="AgentTests\Tests\Test Agent job step creation fails on syntax check.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Post\Script.PostDeployment.sql" />
