@@ -8,6 +8,8 @@ BEGIN
 
 	SET XACT_ABORT ON;
 
+	DECLARE @JobExists BIT = 0;
+
 	---- VALIDATE
 	IF ISNULL( @JobName, '' ) = ''
 		THROW 50001 , N'Job name must not be empty!', 0
@@ -15,15 +17,18 @@ BEGIN
 
 	EXEC [AsyncAgent].[Private_AddAsyncCategoryIfNotExists];
 
-	IF @Force = 0 AND EXISTS (
-		SELECT TOP 1 1
-		FROM [msdb].[dbo].[sysjobs]
-		WHERE [name] = @JobName
-	)
+	SELECT TOP 1 @JobExists = 1
+	FROM [msdb].[dbo].[sysjobs]
+	WHERE [name] = @JobName
+	;
+
+	IF @Force = 0 AND @JobExists = 1
 		THROW 50002, N'Job already exists. Set parameter ''@Force'' to 1 to overwrite.', 0
 	;
 
 	---- ACT
+	IF @JobExists = 1
+		EXEC [msdb].[dbo].[sp_delete_job] @job_name = @JobName;
 	EXEC [msdb].[dbo].[sp_add_job]
 		 @job_name = @JobName
 		,@description = @Description

@@ -1,53 +1,55 @@
 ﻿CREATE PROCEDURE [Async].[Start] (
- @DatabaseName SYSNAME = NULL
-,@SchemaName SYSNAME
-,@ProcName SYSNAME
+ @DatabaseName NVARCHAR(130) = NULL
+,@SchemaName NVARCHAR(130)
+,@ProcName NVARCHAR(130)
 )
 AS
 BEGIN
 
 	SET XACT_ABORT ON;
 
-	DECLARE @Msg NVARCHAR(512);
-
-	---- INIT
-
-	IF @DatabaseName = NULL
+	IF ISNULL( @DatabaseName, '' ) = ''
 		SET @DatabaseName = DB_NAME();
-	ELSE IF @DatabaseName NOT IN (
-		SELECT [name]
-		FROM [sys].[databases]
-	)
-		SET @Msg = N'Database ' + @DatabaseName + ' doesn''t exist.' ;
-		THROW 50001, @Msg, 0
+
+	DECLARE @_FQProcName NVARCHAR(392) = [AsyncAgent].[GetFQProcName] (
+		@DatabaseName, @SchemaName, @ProcName )
+	;
+	DECLARE @_FQProcNameHash CHAR(32) = [AsyncAgent].[GetFQProcNameHash] (
+		@DatabaseName, @SchemaName, @ProcName )
 	;
 
-	-- TODO: Doesn't support secure quotation yet! Implement by chance.
-	DECLARE @_FQProcName NVARCHAR(261) = @SchemaName + @ProcName;
+	DECLARE @_Msg NVARCHAR(1000);
 
 
 	---- VALIDATE 
+	-- DB_ID does not work for quoted input ( e.g. DB_ID( N'master' ) -> 1; DB_ID( N'[master]' ) -> NULL ).
+	SET @DatabaseName = [AsyncAgent].[UnquoteSb_Sysname]( @DatabaseName );
+	IF DB_ID( @DatabaseName ) IS NULL
+	BEGIN
+		SET @_Msg = N'Database ''' + @DatabaseName + ''' doesn''t exist! Check your input please.';
+		THROW 50001, @_Msg, 0
+	END
 
-	-- NULL check to pure procedure qualifier.
-	IF @_FQProcName IS NULL
-		THROW 50001, N'Schema or proc name must not be NULL.', 0
-	;
-
-	-- Add DB context to procedure qualifier.
-	SET @_FQProcName = @DatabaseName + @_FQProcName;
-
+	-- OBJECT_ID does work with quoted sysnames however...
 	IF OBJECT_ID( @_FQProcName ) IS NULL
-		SET @Msg = N'Unknown procedure: ' + @_FQProcName;
-		THROW 50002, @Msg, 0
+	BEGIN
+		SET @_Msg = N'Unknown procedure: ' + @_FQProcName + '. Check your input please.';
+		THROW 50002, @_Msg, 0
+	END
 	;
+
 
 	---- ACT
+	SET @_FQProcName = N'EXEC ' + @_FQProcName + ';';
+	EXEC [AsyncAgent].[Private_CreateJob] @JobName = @_FQProcNameHash, @Force = 1;
+	EXEC [AsyncAgent].[Private_AddTsqlJobStep]
+		 @JobName = @_FQProcNameHash
+		,@StepName = @_FQProcNameHash
+		,@Command = @_FQProcName
+		,@ValidateSyntax = 0
+	;
+	EXEC [AsyncAgent].[Private_StartJob] @JobName = @_FQProcNameHash;
 
-	-- Create Job
-	-- TODO
-
-	-- Start Job
-	-- TODO
 
 	RETURN 0;
 
