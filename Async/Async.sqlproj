@@ -64,12 +64,11 @@
     <Folder Include="Agent\Procs" />
     <Folder Include="Utility" />
     <Folder Include="Utility\Funcs" />
+    <Folder Include="Utility\Procs" />
   </ItemGroup>
   <ItemGroup>
-    <Build Include="Agent\AsyncAgent.sql" />
     <Build Include="Agent\Procs\Private_CreateJob.sql" />
     <Build Include="Agent\Procs\Private_AddAsyncCategoryIfNotExists.sql" />
-    <Build Include="Async\Async.sql" />
     <Build Include="Async\Procs\Start.sql" />
     <Build Include="Agent\Procs\Private_AddTsqlJobStep.sql" />
     <Build Include="Agent\Procs\Private_StartJob.sql" />
@@ -78,6 +77,8 @@
     <Build Include="Utility\Funcs\UnquoteSb_Sysname.sql" />
     <Build Include="Utility\Funcs\GetFQProcNameHash.sql" />
     <Build Include="Utility\Funcs\GetFQProcName.sql" />
+    <Build Include="Utility\Procs\Private_AssembleCommand.sql" />
+    <Build Include="AsyncAgent.sql" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Async\Procs\Await.sql" />

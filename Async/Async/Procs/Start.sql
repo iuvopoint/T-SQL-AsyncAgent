@@ -1,55 +1,74 @@
-﻿CREATE PROCEDURE [Async].[Start] (
+﻿CREATE PROCEDURE [AsyncAgent].[Start] (
  @DatabaseName NVARCHAR(130) = NULL
 ,@SchemaName NVARCHAR(130)
 ,@ProcName NVARCHAR(130)
+,@Timeout INT = 0 -- Wait @Timeout milliseconds for proc call if currently running ( 0 -> Immediate return; -1 -> 'Infinite' waiting )
 )
 AS
 BEGIN
 
 	SET XACT_ABORT ON;
 
-	IF ISNULL( @DatabaseName, '' ) = ''
-		SET @DatabaseName = DB_NAME();
+	IF @Timeout IS NULL
+		SET @Timeout = 0;
+	IF @Timeout < -1
+		SET @Timeout = ABS( @Timeout );
+		
 
-	DECLARE @_FQProcName NVARCHAR(392) = [AsyncAgent].[GetFQProcName] (
-		@DatabaseName, @SchemaName, @ProcName )
+	DECLARE @_FQProcName NVARCHAR(392);
+	DECLARE @_FQProcNameHash CHAR(32);
+	DECLARE @_Command NVARCHAR(4000); 
+
+	DECLARE @LockAcquired INT;
+
+	EXEC [AsyncAgent].[Private_AssembleCommand]
+		 @DatabaseName = @DatabaseName
+		,@SchemaName = @SchemaName
+		,@ProcName = @ProcName
+		,@FQProcName = @_FQProcName OUTPUT
+		,@FQProcNameHash = @_FQProcNameHash OUTPUT
+		,@Command = @_Command OUTPUT
 	;
-	DECLARE @_FQProcNameHash CHAR(32) = [AsyncAgent].[GetFQProcNameHash] (
-		@DatabaseName, @SchemaName, @ProcName )
+
+	-- Job can only be recreated/started if it's not currently running.
+	EXEC @LockAcquired = [sp_getapplock]
+		 @Resource = @_FQProcNameHash
+		,@LockMode = N'Exclusive'
+		,@LockOwner = N'Session'
+		,@LockTimeout = @Timeout
 	;
 
 	DECLARE @_Msg NVARCHAR(1000);
-
-
-	---- VALIDATE 
-	-- DB_ID does not work for quoted input ( e.g. DB_ID( N'master' ) -> 1; DB_ID( N'[master]' ) -> NULL ).
-	SET @DatabaseName = [AsyncAgent].[UnquoteSb_Sysname]( @DatabaseName );
-	IF DB_ID( @DatabaseName ) IS NULL
+	IF @LockAcquired < 0 
 	BEGIN
-		SET @_Msg = N'Database ''' + @DatabaseName + ''' doesn''t exist! Check your input please.';
-		THROW 50001, @_Msg, 0
+		SET @_Msg = N'Lock for proc ' + @_FQProcName + ' (' + @_FQProcNameHash + ') couldn''t be acquired. It hasn''t been started!';
+		THROW 50010, @_Msg, 0;
 	END
 
-	-- OBJECT_ID does work with quoted sysnames however...
-	IF OBJECT_ID( @_FQProcName ) IS NULL
-	BEGIN
-		SET @_Msg = N'Unknown procedure: ' + @_FQProcName + '. Check your input please.';
-		THROW 50002, @_Msg, 0
-	END
+	BEGIN TRY
+
+		EXEC [AsyncAgent].[Private_CreateJob] @JobName = @_FQProcNameHash, @Force = 1;
+		EXEC [AsyncAgent].[Private_AddTsqlJobStep]
+			 @JobName = @_FQProcNameHash
+			,@StepName = @_FQProcNameHash
+			,@Command = @_Command
+			,@ValidateSyntax = 0
+		;
+		EXEC [AsyncAgent].[Private_StartJob] @JobName = @_FQProcNameHash;
+
+		WAITFOR DELAY N'00:00:01';
+		
+	END TRY
+	BEGIN CATCH
+	END CATCH
+
+	-- In every case - even if something went wrong - lock has to be released.
+	-- Started job will then acquire an exclusive lock and release after execution.
+	-- A lock that is acquired in this context can't be released by a job!
+	EXEC [sp_releaseapplock]
+		 @Resource = @_FQProcNameHash
+		,@LockOwner = N'Session'
 	;
-
-
-	---- ACT
-	SET @_FQProcName = N'EXEC ' + @_FQProcName + ';';
-	EXEC [AsyncAgent].[Private_CreateJob] @JobName = @_FQProcNameHash, @Force = 1;
-	EXEC [AsyncAgent].[Private_AddTsqlJobStep]
-		 @JobName = @_FQProcNameHash
-		,@StepName = @_FQProcNameHash
-		,@Command = @_FQProcName
-		,@ValidateSyntax = 0
-	;
-	EXEC [AsyncAgent].[Private_StartJob] @JobName = @_FQProcNameHash;
-
 
 	RETURN 0;
 
