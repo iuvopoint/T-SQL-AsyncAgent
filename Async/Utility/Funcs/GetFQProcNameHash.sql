@@ -7,8 +7,6 @@ RETURNS CHAR(32)
 AS
 BEGIN
 
-	-- #TODO: Write tests
-
 	-- Returns MD5 hash of standardized procedure name format. Example:
 	-- 'msdb.dbo.SysJobs' returns same hash result as 'msdb.[dbo].sysjobs'
 

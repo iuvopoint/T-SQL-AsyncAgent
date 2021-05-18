@@ -7,8 +7,6 @@ RETURNS NVARCHAR(392)
 AS
 BEGIN
 
-	-- #TODO: Write tests
-
 	IF ISNULL( @DatabaseName, '' ) = ''
 		SET @DatabaseName = DB_NAME();
 

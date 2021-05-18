@@ -65,6 +65,9 @@
     <Folder Include="Utility" />
     <Folder Include="Utility\Funcs" />
     <Folder Include="Utility\Procs" />
+    <Folder Include="Agent\Funcs" />
+    <Folder Include="AppLock" />
+    <Folder Include="AppLock\Procs" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Agent\Procs\Private_CreateJob.sql" />
@@ -72,13 +75,17 @@
     <Build Include="Async\Procs\Start.sql" />
     <Build Include="Agent\Procs\Private_AddTsqlJobStep.sql" />
     <Build Include="Agent\Procs\Private_StartJob.sql" />
-    <Build Include="Utility\Funcs\isQuotedSb_Sysname.sql" />
+    <Build Include="Utility\Funcs\IsQuotedSb_Sysname.sql" />
     <Build Include="Utility\Funcs\QuoteSb_Sysname.sql" />
     <Build Include="Utility\Funcs\UnquoteSb_Sysname.sql" />
     <Build Include="Utility\Funcs\GetFQProcNameHash.sql" />
     <Build Include="Utility\Funcs\GetFQProcName.sql" />
     <Build Include="Utility\Procs\Private_AssembleCommand.sql" />
     <Build Include="AsyncAgent.sql" />
+    <Build Include="Agent\Funcs\IsJobRunning.sql" />
+    <Build Include="Agent\Procs\Private_WaitForStartedJob.sql" />
+    <Build Include="AppLock\Procs\Private_AcquireJobAppLock.sql" />
+    <Build Include="AppLock\Procs\Private_ReleaseJobAppLock.sql" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Async\Procs\Await.sql" />

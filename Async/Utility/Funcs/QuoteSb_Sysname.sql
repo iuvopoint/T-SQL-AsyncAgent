@@ -5,11 +5,9 @@ RETURNS NVARCHAR(130)
 AS
 BEGIN
 
-	-- #TODO: Write tests
-
 	-- Returns NULL if @Sysname is NULL, SB quoted string otherwise.
 
-	IF [AsyncAgent].[isQuotedSb_Sysname]( @Sysname ) = 0
+	IF [AsyncAgent].[IsQuotedSb_Sysname]( @Sysname ) = 0
 		RETURN QUOTENAME( @Sysname );
 
 	RETURN @Sysname;

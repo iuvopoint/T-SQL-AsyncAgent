@@ -1,11 +1,9 @@
-﻿CREATE FUNCTION [AsyncAgent].[isQuotedSb_Sysname] (
+﻿CREATE FUNCTION [AsyncAgent].[IsQuotedSb_Sysname] (
  @Sysname NVARCHAR(130)
 )
 RETURNS BIT
 AS
 BEGIN
-
-	-- #TODO: Write tests
 
 	-- Rules for quoted sysname identifiers:
 	-- 1. Must be wrapped in square brackets ( '[...]' )

@@ -6,6 +6,9 @@
 AS
 BEGIN
 
+	-- #TODO: Change from recreating (deleting and creating) jobs to updating jobs.
+	-- As a result, job history will be retained.
+
 	SET XACT_ABORT ON;
 
 	DECLARE @JobExists BIT = 0;

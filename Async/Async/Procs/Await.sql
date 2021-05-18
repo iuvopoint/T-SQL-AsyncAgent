@@ -2,7 +2,7 @@
  @DatabaseName NVARCHAR(130) = NULL
 ,@SchemaName NVARCHAR(130)
 ,@ProcName NVARCHAR(130)
-,@Timeout INT = -1 -- Wait @Timeout milliseconds for proc call if currently running ( 0 -> Immediate return; -1 -> 'Infinite' waiting )
+,@TimeoutMsec INT = -1 -- Wait @Timeout milliseconds for proc call if currently running ( 0 -> Immediate return; -1 -> 'Infinite' waiting )
 )
 AS
 BEGIN
@@ -13,7 +13,7 @@ BEGIN
 	DECLARE @_FQProcNameHash CHAR(32);
 	DECLARE @_Command NVARCHAR(4000); 
 
-	DECLARE @LockAcquired INT;
+	DECLARE @_LockAcquired INT;
 
 	EXEC [AsyncAgent].[Private_AssembleCommand]
 		 @DatabaseName = @DatabaseName
@@ -24,23 +24,23 @@ BEGIN
 		,@Command = @_Command OUTPUT
 	;
 
-	EXEC @LockAcquired = [sp_getapplock]
-		 @Resource = @_FQProcNameHash
-		,@LockMode = N'Exclusive'
-		,@LockOwner = N'Session'
-		,@LockTimeout = @Timeout
+	EXEC [AsyncAgent].[Private_AcquireJobAppLock]
+		 @JobName = @_FQProcNameHash
+		,@LockAcquired = @_LockAcquired OUTPUT
+		,@DatabaseName = @DatabaseName
+		,@TimeoutMsec = @TimeoutMsec
 	;
 
-	DECLARE @_Msg NVARCHAR(1000);
-	IF @LockAcquired < 0 
+	IF @_LockAcquired < 0 
 	BEGIN
-		SET @_Msg = N'Lock for proc ' + @_FQProcName + ' (' + @_FQProcNameHash + ') couldn''t be acquired. It might still be executing!';
+		DECLARE @_Msg NVARCHAR(1000) =
+			N'Await lock for proc ''' + @_FQProcName + ''' (job ''' + @_FQProcNameHash + ''') couldn''t be acquired. Proc might still be executing!';
 		THROW 50010, @_Msg, 0;
 	END
 
-	EXEC [sp_releaseapplock]
-		 @Resource = @_FQProcNameHash
-		,@LockOwner = N'Session'
+	EXEC [AsyncAgent].[Private_ReleaseJobAppLock]
+		 @JobName = @_FQProcNameHash
+		,@DatabaseName = @DatabaseName
 	;
 	
 	RETURN 0;

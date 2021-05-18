@@ -34,6 +34,8 @@ BEGIN
 	;
 
 
+	-- #TODO: Move AppLock management to distinct job steps. Will make sure that these are
+	-- called even if there's something wrong with the called proc.
 	---- ACT
 	DECLARE @CRLF NCHAR(2) = CHAR(13) + CHAR(10);
 	SET @Command =

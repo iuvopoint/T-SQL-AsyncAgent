@@ -2,24 +2,29 @@
  @DatabaseName NVARCHAR(130) = NULL
 ,@SchemaName NVARCHAR(130)
 ,@ProcName NVARCHAR(130)
-,@Timeout INT = 0 -- Wait @Timeout milliseconds for proc call if currently running ( 0 -> Immediate return; -1 -> 'Infinite' waiting )
+,@TimeoutMsec INT = 0 -- Wait @TimeoutMsec milliseconds for proc call if currently running ( 0 -> Immediate return; -1 -> 'Infinite' waiting )
 )
 AS
 BEGIN
 
-	SET XACT_ABORT ON;
+	-- #TODO: Add job groups
+	-- - This proc
+	--   - Parameter
+	--   - Shared lock on group name resource
+	-- - New proc [AsyncAgent].[AwaitGroup]
+	--   - Exclusive lock on group name resource 
+	--   - Parameter for 'blocking' or 'non-blocking' waiting
+	--      - 'blocking': no further shared lock can be acquired while waiting
+	--      - 'non-blocking': further shared locks can be acquired while waiting
+	-- - Think about 'handing over' group locks safely from start proc to agent job
 
-	IF @Timeout IS NULL
-		SET @Timeout = 0;
-	IF @Timeout < -1
-		SET @Timeout = ABS( @Timeout );
-		
+	SET XACT_ABORT ON;
 
 	DECLARE @_FQProcName NVARCHAR(392);
 	DECLARE @_FQProcNameHash CHAR(32);
 	DECLARE @_Command NVARCHAR(4000); 
 
-	DECLARE @LockAcquired INT;
+	DECLARE @_LockAcquired INT;
 
 	EXEC [AsyncAgent].[Private_AssembleCommand]
 		 @DatabaseName = @DatabaseName
@@ -31,17 +36,17 @@ BEGIN
 	;
 
 	-- Job can only be recreated/started if it's not currently running.
-	EXEC @LockAcquired = [sp_getapplock]
-		 @Resource = @_FQProcNameHash
-		,@LockMode = N'Exclusive'
-		,@LockOwner = N'Session'
-		,@LockTimeout = @Timeout
+	EXEC [AsyncAgent].[Private_AcquireJobAppLock]
+		 @JobName = @_FQProcNameHash
+		,@LockAcquired = @_LockAcquired OUTPUT
+		,@DatabaseName = @DatabaseName
+		,@TimeoutMsec = @TimeoutMsec
 	;
 
-	DECLARE @_Msg NVARCHAR(1000);
-	IF @LockAcquired < 0 
+	IF @_LockAcquired < 0 
 	BEGIN
-		SET @_Msg = N'Lock for proc ' + @_FQProcName + ' (' + @_FQProcNameHash + ') couldn''t be acquired. It hasn''t been started!';
+		DECLARE @_Msg NVARCHAR(1000) =
+			N'Start lock for proc ''' + @_FQProcName + ''' (job ''' + @_FQProcNameHash + ''') couldn''t be acquired. Proc hasn''t been executed!';
 		THROW 50010, @_Msg, 0;
 	END
 
@@ -56,18 +61,25 @@ BEGIN
 		;
 		EXEC [AsyncAgent].[Private_StartJob] @JobName = @_FQProcNameHash;
 
-		WAITFOR DELAY N'00:00:01';
+		EXEC [AsyncAgent].[Private_WaitForStartedJob] @JobName = @_FQProcNameHash;
 		
 	END TRY
 	BEGIN CATCH
+
+		-- In every case - even if something went wrong - lock has to be released.
+		EXEC [AsyncAgent].[Private_ReleaseJobAppLock]
+			 @JobName = @_FQProcNameHash
+			,@DatabaseName = @DatabaseName
+		;
+		THROW;
+
 	END CATCH
 
-	-- In every case - even if something went wrong - lock has to be released.
-	-- Started job will then acquire an exclusive lock and release after execution.
+	-- Started job will acquire an exclusive lock and release after execution.
 	-- A lock that is acquired in this context can't be released by a job!
-	EXEC [sp_releaseapplock]
-		 @Resource = @_FQProcNameHash
-		,@LockOwner = N'Session'
+	EXEC [AsyncAgent].[Private_ReleaseJobAppLock]
+		 @JobName = @_FQProcNameHash
+		,@DatabaseName = @DatabaseName
 	;
 
 	RETURN 0;

@@ -47,8 +47,8 @@ BEGIN
 	-- DM view used here is always evaluated in current DB context (even when called dynamically).
 	-- If cross-DB code has to be validated then value of @Command has to contain according
 	-- three-part names!
-	-- Additional cases have been identified that cause errors in this validation. Actually
-	-- there are none and statement would execute correctly (e.g. if proc uses temp tables).
+	-- Additionally, in some cases this validation throws errors for commands that would execute
+	-- successfully.
 	IF @ValidateSyntax = 1 AND EXISTS (
 		SELECT TOP 1 1
 		FROM [sys].[dm_exec_describe_first_result_set] ( @Command, NULL, 0 )
