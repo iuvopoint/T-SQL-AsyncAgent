@@ -72,7 +72,7 @@
   <ItemGroup>
     <Build Include="Agent\Procs\Private_CreateJob.sql" />
     <Build Include="Agent\Procs\Private_AddAsyncCategoryIfNotExists.sql" />
-    <Build Include="Async\Procs\Start.sql" />
+    <Build Include="Async\Procs\StartProc.sql" />
     <Build Include="Agent\Procs\Private_AddTsqlJobStep.sql" />
     <Build Include="Agent\Procs\Private_StartJob.sql" />
     <Build Include="Utility\Funcs\IsQuotedSb_Sysname.sql" />
@@ -84,11 +84,15 @@
     <Build Include="AsyncAgent.sql" />
     <Build Include="Agent\Funcs\IsJobRunning.sql" />
     <Build Include="Agent\Procs\Private_WaitForStartedJob.sql" />
-    <Build Include="AppLock\Procs\Private_AcquireJobAppLock.sql" />
-    <Build Include="AppLock\Procs\Private_ReleaseJobAppLock.sql" />
+    <Build Include="AppLock\Procs\Private_AcquireAppLock_Job.sql" />
+    <Build Include="AppLock\Procs\Private_ReleaseAppLock_Job.sql" />
+    <Build Include="AppLock\Procs\Private_AcquireAppLock_GroupStart.sql" />
+    <Build Include="AppLock\Procs\Private_AcquireAppLock_GroupAwait.sql" />
+    <Build Include="AppLock\Procs\Private_ReleaseAppLock_Group.sql" />
+    <Build Include="Async\Procs\AwaitGroup.sql" />
   </ItemGroup>
   <ItemGroup>
-    <Build Include="Async\Procs\Await.sql" />
+    <Build Include="Async\Procs\AwaitProc.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

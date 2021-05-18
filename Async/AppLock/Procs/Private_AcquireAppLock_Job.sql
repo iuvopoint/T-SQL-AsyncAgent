@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [AsyncAgent].[Private_AcquireJobAppLock] (
+﻿CREATE PROCEDURE [AsyncAgent].[Private_AcquireAppLock_Job] (
  @JobName NVARCHAR(128)
 ,@LockAcquired INT OUTPUT
 ,@DatabaseName NVARCHAR(128) = NULL

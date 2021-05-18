@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [AsyncAgent].[Private_ReleaseJobAppLock] (
+﻿CREATE PROCEDURE [AsyncAgent].[Private_ReleaseAppLock_Job] (
  @JobName NVARCHAR(128)
 ,@DatabaseName NVARCHAR(128) = NULL
 )

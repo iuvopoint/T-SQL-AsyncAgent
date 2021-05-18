@@ -1,7 +1,7 @@
-﻿CREATE PROCEDURE [AsyncAgent].[Await] (
- @DatabaseName NVARCHAR(130) = NULL
-,@SchemaName NVARCHAR(130)
+﻿CREATE PROCEDURE [AsyncAgent].[AwaitProc] (
+ @SchemaName NVARCHAR(130)
 ,@ProcName NVARCHAR(130)
+,@DatabaseName NVARCHAR(130) = NULL
 ,@TimeoutMsec INT = -1 -- Wait @Timeout milliseconds for proc call if currently running ( 0 -> Immediate return; -1 -> 'Infinite' waiting )
 )
 AS
@@ -24,7 +24,7 @@ BEGIN
 		,@Command = @_Command OUTPUT
 	;
 
-	EXEC [AsyncAgent].[Private_AcquireJobAppLock]
+	EXEC [AsyncAgent].[Private_AcquireAppLock_Job]
 		 @JobName = @_FQProcNameHash
 		,@LockAcquired = @_LockAcquired OUTPUT
 		,@DatabaseName = @DatabaseName
@@ -38,7 +38,7 @@ BEGIN
 		THROW 50010, @_Msg, 0;
 	END
 
-	EXEC [AsyncAgent].[Private_ReleaseJobAppLock]
+	EXEC [AsyncAgent].[Private_ReleaseAppLock_Job]
 		 @JobName = @_FQProcNameHash
 		,@DatabaseName = @DatabaseName
 	;
