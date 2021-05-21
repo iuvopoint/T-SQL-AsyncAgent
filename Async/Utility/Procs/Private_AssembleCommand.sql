@@ -1,10 +1,11 @@
 ﻿CREATE PROCEDURE [AsyncAgent].[Private_AssembleCommand] (
- @DatabaseName NVARCHAR(130) = NULL
-,@SchemaName NVARCHAR(130)
+ @SchemaName NVARCHAR(130)
 ,@ProcName NVARCHAR(130)
 ,@FQProcName NVARCHAR(392) OUTPUT
 ,@FQProcNameHash CHAR(32) OUTPUT
 ,@Command NVARCHAR(4000) OUTPUT
+,@DatabaseName NVARCHAR(130) = NULL
+,@AsyncGroup NVARCHAR(128) = NULL
 )
 AS
 BEGIN
@@ -57,6 +58,27 @@ BEGIN
 		N'PRINT N''Lock for resource ''''' + @FQProcNameHash + ''''' released.'';' + @CRLF +
 		N'GO'
 	;
+
+	IF ISNULL( @AsyncGroup, '' ) > ''
+		SET @Command = 
+			N'EXEC [sp_getapplock]' + @CRLF +
+			N'	 @Resource = N''' + @AsyncGroup + '''' + @CRLF +
+			N'	,@LockMode = N''Shared''' + @CRLF +
+			N'	,@LockOwner = N''Session''' + @CRLF +
+			N';' + @CRLF +
+			N'PRINT N''Lock for resource ''''' + @AsyncGroup + ''''' acquired.'';' + @CRLF +
+			N'GO' + @CRLF + @CRLF +
+
+			+ @Command + @CRLF + @CRLF +
+
+			N'EXEC [sp_releaseapplock]' + @CRLF +
+			N'	 @Resource = N''' + @AsyncGroup + '''' + @CRLF +
+			N'	,@LockOwner = N''Session''' + @CRLF +
+			N';' + @CRLF +
+			N'PRINT N''Lock for resource ''''' + @AsyncGroup + ''''' released.'';' + @CRLF +
+			N'GO'
+		;
+
 
 	RETURN 0;
 

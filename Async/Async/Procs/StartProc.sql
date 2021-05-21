@@ -8,17 +8,6 @@
 AS
 BEGIN
 
-	-- #TODO: Add job groups
-	-- - This proc
-	--   - Parameter
-	--   - Shared lock on group name resource
-	-- - New proc [AsyncAgent].[AwaitGroup]
-	--   - Exclusive lock on group name resource 
-	--   - Parameter for 'blocking' or 'non-blocking' waiting
-	--      - 'blocking': no further shared lock can be acquired while waiting
-	--      - 'non-blocking': further shared locks can be acquired while waiting
-	-- - Think about 'handing over' group locks safely from start proc to agent job
-
 	SET XACT_ABORT ON;
 
 	DECLARE @_FQProcName NVARCHAR(392);
@@ -30,12 +19,13 @@ BEGIN
 	DECLARE @_Msg NVARCHAR(1000);
 
 	EXEC [AsyncAgent].[Private_AssembleCommand]
-		 @DatabaseName = @DatabaseName
-		,@SchemaName = @SchemaName
+		 @SchemaName = @SchemaName
 		,@ProcName = @ProcName
 		,@FQProcName = @_FQProcName OUTPUT
 		,@FQProcNameHash = @_FQProcNameHash OUTPUT
 		,@Command = @_Command OUTPUT
+		,@DatabaseName = @DatabaseName
+		,@AsyncGroup = @AsyncGroup
 	;
 
 	BEGIN TRY
@@ -87,14 +77,14 @@ BEGIN
 	BEGIN CATCH
 
 		-- Locks always have to be released!
-		IF @_LockAcquired_Group >= 0
-			EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
-				 @AsyncGroup = @AsyncGroup
-				,@DatabaseName = @DatabaseName
-		;
 		IF @_LockAcquired_Job >= 0
 			EXEC [AsyncAgent].[Private_ReleaseAppLock_Job]
 				 @JobName = @_FQProcNameHash
+				,@DatabaseName = @DatabaseName
+		;
+		IF @_LockAcquired_Group >= 0
+			EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
+				 @AsyncGroup = @AsyncGroup
 				,@DatabaseName = @DatabaseName
 		;
 		THROW;
@@ -104,14 +94,14 @@ BEGIN
 	-- Started job will acquire exclusive lock on job and shared lock on group ( if specified ).
 	-- After the job has finished, it will release both locks.
 	-- A lock that is acquired in this context can't be released by a job!
-	IF @_LockAcquired_Group >= 0
-		EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
-			 @AsyncGroup = @AsyncGroup
-			,@DatabaseName = @DatabaseName
-	;
 	IF @_LockAcquired_Job >= 0
 		EXEC [AsyncAgent].[Private_ReleaseAppLock_Job]
 			 @JobName = @_FQProcNameHash
+			,@DatabaseName = @DatabaseName
+	;
+	IF @_LockAcquired_Group >= 0
+		EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
+			 @AsyncGroup = @AsyncGroup
 			,@DatabaseName = @DatabaseName
 	;
 

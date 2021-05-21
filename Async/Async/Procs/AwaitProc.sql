@@ -16,12 +16,12 @@ BEGIN
 	DECLARE @_LockAcquired INT;
 
 	EXEC [AsyncAgent].[Private_AssembleCommand]
-		 @DatabaseName = @DatabaseName
-		,@SchemaName = @SchemaName
+		 @SchemaName = @SchemaName
 		,@ProcName = @ProcName
 		,@FQProcName = @_FQProcName OUTPUT
 		,@FQProcNameHash = @_FQProcNameHash OUTPUT
 		,@Command = @_Command OUTPUT
+		,@DatabaseName = @DatabaseName
 	;
 
 	EXEC [AsyncAgent].[Private_AcquireAppLock_Job]

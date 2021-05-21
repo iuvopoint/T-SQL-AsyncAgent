@@ -1,20 +1,20 @@
 ﻿CREATE PROCEDURE [AsyncAgent].[Private_AcquireAppLock_GroupAwait] (
  @AsyncGroup NVARCHAR(128)
-,@DelaySec INT
 ,@LockAcquired INT OUTPUT
+,@DelaySec INT = 5
 ,@DatabaseName NVARCHAR(128) = NULL
 ,@TimeoutSec INT = -1
 )
 AS
 BEGIN
 
-	-- Proc waits 'non-blocking' for an exclusive lock on the group.
+	-- Proc waits 'non-blocking' for acquiring an exclusive lock on the group.
 	-- This can be obtained only if all shared proc locks are released, meaning
 	-- that all grouped proc executions are finished.
 	-- Why 'non-blocking'?
 	-- If a request for an exclusive lock is made and held ('blocking'), no other
 	-- shared locks can be acquired. As a result, not all grouped procs might be
-	-- already started and neither won't if the this proc is called 'too early'.
+	-- already started and neither won't if this proc is called 'too early'.
 
 	-- #TODO: Develop this!
 
@@ -23,21 +23,44 @@ BEGIN
 	IF ISNULL( @DatabaseName, '' ) = ''
 		SET @DatabaseName = DB_NAME();
 
-	DECLARE @_DefaultDelay SMALLINT = 400;
-	DECLARE @_MinDelay SMALLINT = 50;
-	DECLARE @_MaxDelay SMALLINT = 999;
+	-- Determining delay between checking job run status
+	DECLARE @_DefaultDelaySec SMALLINT = 5;
+	DECLARE @_MinDelaySec SMALLINT = 1;
+	DECLARE @_MaxDelaySec SMALLINT = 300;
 	DECLARE @_DelayString VARCHAR(12);
+	DECLARE @_DelayMinutes TINYINT;
 
+	IF @DelaySec IS NULL
+		SET @DelaySec = @_DefaultDelaySec;
+	IF @DelaySec < @_MinDelaySec
+		SET @DelaySec = @_MinDelaySec;
+	IF @DelaySec > @_MaxDelaySec
+		SET @DelaySec = @_MaxDelaySec;
+
+	IF @DelaySec >= 60
+	BEGIN
+		SET @_DelayMinutes = @DelaySec / 60;
+		SET @DelaySec = @DelaySec % 60;
+	END
+
+	SET @_DelayString = 
+		CONCAT( '00:0', @_DelayMinutes, ':', RIGHT( '00' + CAST( @DelaySec AS VARCHAR(2) ), 2 ) )
+	;
+
+	-- Determining timeout datetime
 	DECLARE @_TimeoutDatetime DATETIME;
+	IF @TimeoutSec IS NULL
+		SEt @TimeoutSec = -1;
+	IF @TimeoutSec < -1
+		SET @TimeoutSec = ABS( @TimeoutSec ) - 1
+	;
 
-	THROW 50100, N'Not implemented exception for [AsyncAgent].[Private_AcquireAppLock_GroupAwait]!', 0;
+	IF @_TimeoutDatetime > -1
+		SET @_TimeoutDatetime = DATEADD( SECOND, @TimeoutSec, GETDATE() );
+	ELSE
+		SET @_TimeoutDatetime = DATETIMEFROMPARTS( 9999, 12, 31, 23, 59, 59, 997 );
 
-	/*
-	IF @TimeoutMsec IS NULL
-		SET @TimeoutMsec = 0;
-	IF @TimeoutMsec < -1
-		SET @TimeoutMsec = ABS( @TimeoutMsec ) - 1;
-
+	DECLARE @_Msg NVARCHAR(1000);
 
 	DECLARE @_CRLF CHAR(2) = CHAR(13) + CHAR(10);
 	DECLARE @_Sql NVARCHAR(4000) =
@@ -49,17 +72,54 @@ BEGIN
 		N';'
 	;
 	DECLARE @_ParamDefinition NVARCHAR(1000) =
-		N'@LockAcquired INT OUTPUT, @AsyncGroup NVARCHAR(128), @TimeoutMsec INT'
+		N'@LockAcquired INT OUTPUT, @AsyncGroup NVARCHAR(128)'
 	;
 
-	EXEC sp_executesql
-		 @stmnt = @_Sql
-		,@params = @_ParamDefinition
-		,@LockAcquired = @LockAcquired OUTPUT
-		,@AsyncGroup = @AsyncGroup
-		,@TimeoutMsec = @TimeoutMsec
-	;
-	*/
+
+	---- ACT
+	WHILE ( GETDATE() < @_TimeoutDatetime )
+	BEGIN
+
+		WAITFOR DELAY @_DelayString;
+		/*
+		*/
+
+		EXEC sp_executesql
+			 @stmnt = @_Sql
+			,@params = @_ParamDefinition
+			,@LockAcquired = @LockAcquired OUTPUT
+			,@AsyncGroup = @AsyncGroup
+		;
+
+		-- 0: The lock was successfully granted synchronously.
+		-- 1: The lock was granted successfully after waiting for other incompatible locks to be released.
+		IF @LockAcquired >= 0 -- Group call finished
+		BEGIN
+			-- Since this proc checks for finished group calls only,
+			-- lock has to be released immediately after acquiring.
+			EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
+				 @AsyncGroup = @AsyncGroup
+				,@DatabaseName = @DatabaseName
+			;
+			RETURN 0;
+		END
+
+		-- -999: Indicates a parameter validation or other call error.
+		IF @LockAcquired = -999
+		BEGIN
+			SET @_Msg = N'Internal error while trying to acquire app lock for async group ''' + @AsyncGroup + '''. Procs in group may still be running!';
+			THROW 50200, @_Msg, 0;
+		END
+
+		-- Go on waiting for group call to finish
+		-- -1: The lock request timed out.
+		-- -2: The lock request was canceled.
+		-- -3: The lock request was chosen as a deadlock victim.
+
+	END
+
+	SET @_Msg = N'Timeout reached before async group ''' + @AsyncGroup + ''' finished executing. Procs in group may still be running!';
+	THROW 50002, @_Msg, 0;
 
 	RETURN 0;
 
