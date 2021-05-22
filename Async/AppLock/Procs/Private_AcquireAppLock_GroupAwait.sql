@@ -16,8 +16,6 @@ BEGIN
 	-- shared locks can be acquired. As a result, not all grouped procs might be
 	-- already started and neither won't if this proc is called 'too early'.
 
-	-- #TODO: Develop this!
-
 	SET XACT_ABORT ON;
 
 	IF ISNULL( @DatabaseName, '' ) = ''
@@ -81,8 +79,6 @@ BEGIN
 	BEGIN
 
 		WAITFOR DELAY @_DelayString;
-		/*
-		*/
 
 		EXEC sp_executesql
 			 @stmnt = @_Sql
@@ -95,12 +91,6 @@ BEGIN
 		-- 1: The lock was granted successfully after waiting for other incompatible locks to be released.
 		IF @LockAcquired >= 0 -- Group call finished
 		BEGIN
-			-- Since this proc checks for finished group calls only,
-			-- lock has to be released immediately after acquiring.
-			EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
-				 @AsyncGroup = @AsyncGroup
-				,@DatabaseName = @DatabaseName
-			;
 			RETURN 0;
 		END
 
@@ -108,7 +98,7 @@ BEGIN
 		IF @LockAcquired = -999
 		BEGIN
 			SET @_Msg = N'Internal error while trying to acquire app lock for async group ''' + @AsyncGroup + '''. Procs in group may still be running!';
-			THROW 50200, @_Msg, 0;
+			THROW 50011, @_Msg, 0;
 		END
 
 		-- Go on waiting for group call to finish
@@ -118,7 +108,7 @@ BEGIN
 
 	END
 
-	SET @_Msg = N'Timeout reached before async group ''' + @AsyncGroup + ''' finished executing. Procs in group may still be running!';
+	SET @_Msg = N'Timeout reached before AsyncGroup ''' + @AsyncGroup + ''' finished executing. Group procs might still be running!';
 	THROW 50002, @_Msg, 0;
 
 	RETURN 0;

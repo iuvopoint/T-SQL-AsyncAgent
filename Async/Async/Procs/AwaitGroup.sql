@@ -25,17 +25,11 @@ BEGIN
 		,@TimeoutSec = @TimeoutSec
 	;
 
-	IF @_LockAcquired < 0 
-	BEGIN
-		DECLARE @_Msg NVARCHAR(1000) =
-			N'Await lock for AsyncGroup ''' + @AsyncGroup + ''' couldn''t be acquired. Group procs might still be executing!';
-		THROW 50011, @_Msg, 0;
-	END
-
-	EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
-		 @AsyncGroup = @AsyncGroup
-		,@DatabaseName = @DatabaseName
-	;
+	IF @_LockAcquired >= 0
+		EXEC [AsyncAgent].[Private_ReleaseAppLock_Group]
+			 @AsyncGroup = @AsyncGroup
+			,@DatabaseName = @DatabaseName
+		;
 	
 	RETURN 0;
 
