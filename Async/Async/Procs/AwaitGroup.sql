@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [AsyncAgent].[AwaitGroup] (
  @AsyncGroup NVARCHAR(128)
-,@DelaySec INT -- Ask every @DelaySec if group finished executing
+,@DelaySec INT -- Ask every @DelaySec seconds if group finished executing
 ,@DatabaseName NVARCHAR(130) = NULL
 ,@TimeoutSec INT = -1 -- Wait @TimeoutSec seconds for AsyncGroup to finish ( 0 -> Immediate return; -1 -> 'Infinite' waiting )
 )
