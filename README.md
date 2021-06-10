@@ -87,7 +87,9 @@ As _T-SQL-AsyncAgent_ makes (obviously) use of the [SQL Server Agent][Agent], th
 
 ## Installation
 
-Currently it's required to deploy _T-SQL-AsyncAgent_ using Visual Studio:
+There are two ways to install _T-SQL-AsyncAgent_, deployment using Visual Studio and running an installation script.
+
+### Installation using Visual Studio
 
 - Install [Visual Studio 2019](https://visualstudio.microsoft.com/vs/) (check [pricing/license terms](https://visualstudio.microsoft.com/vs/pricing/) first)
 - In Visual Studio 2019 Installer, make sure _SQL Server Data Tools_ are installed
@@ -96,7 +98,13 @@ Currently it's required to deploy _T-SQL-AsyncAgent_ using Visual Studio:
 
 If Visual Studio 2019 pricing/licensing terms are a blocking point, you may use [Visual Studio 2017 SSDT](https://docs.microsoft.com/en-us/sql/ssdt/download-sql-server-data-tools-ssdt?view=sql-server-ver15#ssdt-for-vs-2017-standalone-installer) which is completely free of charge. But you will have to adjust project database references to `[msdb]` and `[master]` as there are different file paths for each Visual Studio version.
 
-In future, an installation script may be added to ease this process.
+
+### Installation using Installation Script
+
+- Download from source ( `<Project root>/_publish/publish.sql` ) or from releases
+- Open with IDE of your choice (which is capable of running in SQLCMD mode)
+- Make sure to adjust database name in SQLCMD variable `:setvar DatabaseName "Async"`
+- Run and have fun executing stuff asynchronously
 
 
 ## Limitations
@@ -126,3 +134,8 @@ Copyright © 2021 [iuvopoint Business Intelligence](https://www.iuvopoint.de/).
 Licensed under the MIT License (MIT). See LICENSE for details.
 
 [Agent]: https://docs.microsoft.com/en-us/sql/ssms/agent/sql-server-agent?view=sql-server-ver15
+
+
+## Credits
+
+[Henrik Bauer](https://github.com/HenrikBauer) - Installation script
